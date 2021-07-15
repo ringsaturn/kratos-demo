@@ -5,6 +5,7 @@ import (
 
 	v1 "point-server/api/helloworld/v1"
 	"point-server/internal/biz"
+
 	"github.com/go-kratos/kratos/v2/log"
 )
 
@@ -29,4 +30,15 @@ func (s *GreeterService) SayHello(ctx context.Context, in *v1.HelloRequest) (*v1
 		return nil, v1.ErrorUserNotFound("user not found: %s", in.GetName())
 	}
 	return &v1.HelloReply{Message: "Hello " + in.GetName()}, nil
+}
+
+// GetName implements helloworld.GetName
+func (s *GreeterService) GetName(ctx context.Context, in *v1.GetRequest) (*v1.GetResponse, error) {
+	// s.log.WithContext(ctx).Infof("GetName Received: %v", in.GetName())
+
+	// if in.GetPathRepeatedFloatValue() == "error" {
+	// 	return nil, v1.ErrorUserNotFound("user not found: %s", in.GetName())
+	// }
+	// GetPathRepeatedFloatValue
+	return &v1.GetResponse{Coordinates: in.GetCoordinates()}, nil
 }

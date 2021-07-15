@@ -9,14 +9,20 @@ option java_multiple_files = true;
 option java_package = "dev.kratos.api.helloworld.v1";
 option java_outer_classname = "HelloWorldProtoV1";
 
+
 // The greeting service definition.
 service Greeter {
   // Sends a greeting
-  rpc SayHello (HelloRequest) returns (HelloReply)  {
-        option (google.api.http) = {
-            get: "/helloworld/{name}"
-        };
-    }
+  rpc SayHello(HelloRequest) returns (HelloReply) {
+    option (google.api.http) = {
+      get: "/helloworld/{name}"
+    };
+  }
+  rpc GetName(GetRequest) returns (GetResponse) {
+    option (google.api.http) = {
+      get: "/foo/{coordinates}"
+    };
+  }
 }
 
 // The request message containing the user's name.
@@ -27,4 +33,12 @@ message HelloRequest {
 // The response message containing the greetings
 message HelloReply {
   string message = 1;
+}
+
+message GetRequest {
+  repeated float coordinates = 1;
+}
+
+message GetResponse {
+  repeated float coordinates = 1;
 }

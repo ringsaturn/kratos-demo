@@ -18,12 +18,14 @@ var _ = binding.EncodeURL
 const _ = http.SupportPackageIsVersion1
 
 type GreeterHTTPServer interface {
+	GetName(context.Context, *GetRequest) (*GetResponse, error)
 	SayHello(context.Context, *HelloRequest) (*HelloReply, error)
 }
 
 func RegisterGreeterHTTPServer(s *http.Server, srv GreeterHTTPServer) {
 	r := s.Route("/")
 	r.GET("/helloworld/{name}", _Greeter_SayHello0_HTTP_Handler(srv))
+	r.GET("/foo/{coordinates}", _Greeter_GetName0_HTTP_Handler(srv))
 }
 
 func _Greeter_SayHello0_HTTP_Handler(srv GreeterHTTPServer) func(ctx http.Context) error {
@@ -48,7 +50,30 @@ func _Greeter_SayHello0_HTTP_Handler(srv GreeterHTTPServer) func(ctx http.Contex
 	}
 }
 
+func _Greeter_GetName0_HTTP_Handler(srv GreeterHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in GetRequest
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindVars(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, "/helloworld.v1.Greeter/GetName")
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.GetName(ctx, req.(*GetRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*GetResponse)
+		return ctx.Result(200, reply)
+	}
+}
+
 type GreeterHTTPClient interface {
+	GetName(ctx context.Context, req *GetRequest, opts ...http.CallOption) (rsp *GetResponse, err error)
 	SayHello(ctx context.Context, req *HelloRequest, opts ...http.CallOption) (rsp *HelloReply, err error)
 }
 
@@ -58,6 +83,19 @@ type GreeterHTTPClientImpl struct {
 
 func NewGreeterHTTPClient(client *http.Client) GreeterHTTPClient {
 	return &GreeterHTTPClientImpl{client}
+}
+
+func (c *GreeterHTTPClientImpl) GetName(ctx context.Context, in *GetRequest, opts ...http.CallOption) (*GetResponse, error) {
+	var out GetResponse
+	pattern := "/foo/{coordinates}"
+	path := binding.EncodeURL(pattern, in, true)
+	opts = append(opts, http.Operation("/helloworld.v1.Greeter/GetName"))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, err
 }
 
 func (c *GreeterHTTPClientImpl) SayHello(ctx context.Context, in *HelloRequest, opts ...http.CallOption) (*HelloReply, error) {
